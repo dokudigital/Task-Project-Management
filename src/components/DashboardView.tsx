@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   FolderKanban, 
   CheckCircle2, 
@@ -10,6 +10,8 @@ import {
   ArrowUpRight, 
   CheckSquare, 
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Plus,
   Zap
 } from 'lucide-react';
@@ -52,6 +54,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onOpenNewProjectModal,
   onOpenNewUserModal
 }) => {
+  const [showAllActivities, setShowAllActivities] = useState(false);
+
   // Calculations
   const totalProjects = projects.length;
   const activeProjects = projects.filter(p => p.status === 'active').length;
@@ -77,10 +81,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   };
 
   const statusPieData = [
-    { name: 'Completed (Done)', value: statusCounts.done, color: '#10b981' },
+    { name: 'Done', value: statusCounts.done, color: '#10b981' },
     { name: 'In Progress', value: statusCounts.in_progress, color: '#3b82f6' },
     { name: 'In Review', value: statusCounts.in_review, color: '#f59e0b' },
     { name: 'To Do', value: statusCounts.todo, color: '#64748b' },
+    { name: 'Backlog', value: statusCounts.backlog, color: '#94a3b8' },
   ].filter(d => d.value > 0);
 
   // Workload Chart Data
@@ -251,7 +256,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </span>
           </div>
 
-          <div className="h-64 flex items-center justify-center">
+          <div className="h-64 flex items-center justify-center relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -259,8 +264,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
-                  outerRadius={90}
-                  paddingAngle={5}
+                  outerRadius={88}
+                  paddingAngle={4}
                   dataKey="value"
                 >
                   {statusPieData.map((entry, index) => (
@@ -268,17 +273,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   ))}
                 </Pie>
                 <Tooltip 
+                  formatter={(val: number) => [`${val} tasks`, 'Count']}
                   contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', color: '#f8fafc', borderRadius: '8px', fontSize: '12px' }}
+                  itemStyle={{ color: '#38bdf8', fontWeight: 600 }}
+                  labelStyle={{ color: '#f8fafc', fontWeight: 600 }}
                 />
               </PieChart>
             </ResponsiveContainer>
+            {/* Center label inside donut chart */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span className="text-2xl font-extrabold text-slate-900">{totalTasks}</span>
+              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Total Tasks</span>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-100">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-3 border-t border-slate-100">
             {statusPieData.map((item) => (
               <div key={item.name} className="text-center">
                 <div className="flex items-center justify-center gap-1.5 text-xs text-slate-600">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
                   <span className="font-medium truncate">{item.name}</span>
                 </div>
                 <div className="text-base font-bold text-slate-900 mt-0.5">{item.value}</div>
@@ -447,26 +460,52 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Activity History Feed */}
       <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-2xs">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-bold text-slate-900 text-sm">Recent Workspace Activity</h3>
-          <span className="text-xs text-slate-500">Automated log of status updates & changes</span>
+          <div className="flex items-center gap-2">
+            <h3 className="font-bold text-slate-900 text-sm">Recent Workspace Activity</h3>
+            <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
+              Showing {Math.min(12, activities.length)} of {activities.length}
+            </span>
+          </div>
+          <span className="text-xs text-slate-500 hidden sm:inline">Automated log of status updates & changes</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {activities.map((act) => (
-            <div key={act.id} className="p-3 bg-slate-50 border border-slate-200/60 rounded-lg text-xs flex items-start gap-2.5">
-              <div className="p-1.5 bg-rose-50 text-[#a80800] rounded-full shrink-0 mt-0.5">
+          {(showAllActivities ? activities : activities.slice(0, 12)).map((act) => (
+            <div key={act.id} className="p-3 bg-slate-50 hover:bg-slate-100/80 transition-colors border border-slate-200/60 rounded-lg text-xs flex items-start gap-2.5">
+              <div className="p-1.5 bg-rose-50 text-[#ea1d25] rounded-full shrink-0 mt-0.5">
                 <Zap className="w-3 h-3" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-slate-800">
                   <strong className="font-semibold text-slate-900">{act.user}</strong> {act.action}{' '}
-                  <span className="text-[#a80800] font-medium">{act.target}</span>
+                  <span className="text-[#ea1d25] font-medium">{act.target}</span>
                 </p>
                 <span className="text-[10px] text-slate-400 mt-1 block">{act.timestamp}</span>
               </div>
             </div>
           ))}
         </div>
+
+        {activities.length > 12 && (
+          <div className="mt-4 pt-3 border-t border-slate-100 flex justify-center">
+            <button
+              onClick={() => setShowAllActivities(!showAllActivities)}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-all flex items-center gap-2"
+            >
+              {showAllActivities ? (
+                <>
+                  <span>Show Less (Limit to 12)</span>
+                  <ChevronUp className="w-4 h-4 text-slate-500" />
+                </>
+              ) : (
+                <>
+                  <span>Show More ({activities.length - 12} remaining)</span>
+                  <ChevronDown className="w-4 h-4 text-slate-500" />
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
