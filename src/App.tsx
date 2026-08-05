@@ -262,6 +262,8 @@ export default function App() {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           currentUser={currentUser}
+          tasks={tasks}
+          onSelectTask={(task) => setSelectedTask(task)}
           onOpenNewTaskModal={() => {
             setNewTaskDefaultProjectId(undefined);
             setIsNewTaskModalOpen(true);
