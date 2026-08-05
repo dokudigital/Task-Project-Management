@@ -1,0 +1,6 @@
+{
+  "name": "DOKU - Task & Project Management",
+  "description": "Aplikasi manajemen proyek dan tugas ala Notion lengkap dengan dashboard analitik, papan Kanban, manajemen tim, AI assistant, dan laporan yang dapat diunduh.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
