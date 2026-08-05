@@ -20,6 +20,8 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
   const [password, setPassword] = useState(user.password || 'doku123');
   const [role, setRole] = useState<UserRole>(user.role);
   const [department, setDepartment] = useState(user.department);
+  const [isCustomDept, setIsCustomDept] = useState(false);
+  const [customDept, setCustomDept] = useState('');
   const [title, setTitle] = useState(user.title);
   const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl);
 
@@ -33,7 +35,7 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
       email: email.trim(),
       password: password.trim() || 'doku123',
       role,
-      department: department.trim(),
+      department: isCustomDept ? (customDept.trim() || user.department) : department,
       title: title.trim(),
       avatarUrl: avatarUrl.trim()
     });
@@ -106,28 +108,38 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
 
             <div>
               <label className="font-bold text-slate-700 block mb-1">Department</label>
-              {department === 'CUSTOM' ? (
+              {isCustomDept ? (
                 <div className="flex items-center gap-1">
                   <input
                     type="text"
                     required
                     placeholder="Type department..."
                     autoFocus
-                    onChange={(e) => setDepartment(e.target.value)}
+                    value={customDept}
+                    onChange={(e) => setCustomDept(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 font-medium focus:outline-none focus:border-[#ea1d25]"
                   />
                   <button
                     type="button"
-                    onClick={() => setDepartment(user.department)}
+                    onClick={() => {
+                      setIsCustomDept(false);
+                      setCustomDept('');
+                    }}
                     className="p-2 text-xs font-bold text-slate-500 hover:text-slate-800 shrink-0"
                   >
-                    Reset
+                    Cancel
                   </button>
                 </div>
               ) : (
                 <select
                   value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
+                  onChange={(e) => {
+                    if (e.target.value === 'CUSTOM') {
+                      setIsCustomDept(true);
+                    } else {
+                      setDepartment(e.target.value);
+                    }
+                  }}
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 font-medium focus:outline-none"
                 >
                   <option value={user.department}>{user.department} (Current)</option>

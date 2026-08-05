@@ -18,6 +18,8 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
   const [icon, setIcon] = useState('🚀');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Product Development');
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
+  const [customCategory, setCustomCategory] = useState('');
   const [leadId, setLeadId] = useState(users[0]?.id || '');
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [targetEndDate, setTargetEndDate] = useState('2026-09-30');
@@ -40,7 +42,7 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
       leadId: leadUser.id,
       leadName: leadUser.name,
       memberIds: [leadUser.id],
-      category,
+      category: isCustomCategory ? (customCategory.trim() || 'General') : category,
       startDate,
       targetEndDate,
       budget: Number(budget) || 0,
@@ -108,28 +110,38 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
 
             <div>
               <label className="font-bold text-slate-700 block mb-1">Category</label>
-              {category === 'CUSTOM' ? (
+              {isCustomCategory ? (
                 <div className="flex items-center gap-1">
                   <input
                     type="text"
                     required
                     placeholder="Type custom category..."
                     autoFocus
-                    onChange={(e) => setCategory(e.target.value)}
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 font-medium focus:outline-none focus:border-blue-500"
                   />
                   <button
                     type="button"
-                    onClick={() => setCategory('Product Development')}
+                    onClick={() => {
+                      setIsCustomCategory(false);
+                      setCustomCategory('');
+                    }}
                     className="p-2 text-xs font-bold text-slate-500 hover:text-slate-800 shrink-0"
                   >
-                    Reset
+                    Cancel
                   </button>
                 </div>
               ) : (
                 <select
                   value={category}
-                  onChange={(e) => setCategory(e.target.value)}
+                  onChange={(e) => {
+                    if (e.target.value === 'CUSTOM') {
+                      setIsCustomCategory(true);
+                    } else {
+                      setCategory(e.target.value);
+                    }
+                  }}
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 font-medium focus:outline-none"
                 >
                   <option value="Product Development">Product Development</option>
