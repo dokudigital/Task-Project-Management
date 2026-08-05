@@ -106,17 +106,40 @@ export const EditUserModal: React.FC<EditUserModalProps> = ({
 
             <div>
               <label className="font-bold text-slate-700 block mb-1">Department</label>
-              <select
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 font-medium focus:outline-none"
-              >
-                <option value="Engineering">Engineering</option>
-                <option value="UI/UX Design">UI/UX Design</option>
-                <option value="Product & Tech">Product & Tech</option>
-                <option value="Quality Assurance">Quality Assurance</option>
-                <option value="Management">Management</option>
-              </select>
+              {department === 'CUSTOM' ? (
+                <div className="flex items-center gap-1">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Type department..."
+                    autoFocus
+                    onChange={(e) => setDepartment(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 font-medium focus:outline-none focus:border-[#ea1d25]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setDepartment(user.department)}
+                    className="p-2 text-xs font-bold text-slate-500 hover:text-slate-800 shrink-0"
+                  >
+                    Reset
+                  </button>
+                </div>
+              ) : (
+                <select
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 font-medium focus:outline-none"
+                >
+                  <option value={user.department}>{user.department} (Current)</option>
+                  <option value="Engineering">Engineering</option>
+                  <option value="UI/UX Design">UI/UX Design</option>
+                  <option value="Product & Tech">Product & Tech</option>
+                  <option value="Quality Assurance">Quality Assurance</option>
+                  <option value="Management">Management</option>
+                  <option value="Finance & Ops">Finance & Ops</option>
+                  <option value="CUSTOM">+ Custom Dept...</option>
+                </select>
+              )}
             </div>
           </div>
 

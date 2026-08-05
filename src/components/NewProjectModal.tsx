@@ -108,17 +108,38 @@ export const NewProjectModal: React.FC<NewProjectModalProps> = ({
 
             <div>
               <label className="font-bold text-slate-700 block mb-1">Category</label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 font-medium focus:outline-none"
-              >
-                <option value="Product Development">Product Development</option>
-                <option value="Mobile Application">Mobile Application</option>
-                <option value="AI & Data Tech">AI & Data Tech</option>
-                <option value="Infrastructure">Infrastructure</option>
-                <option value="Cyber Security">Cyber Security</option>
-              </select>
+              {category === 'CUSTOM' ? (
+                <div className="flex items-center gap-1">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Type custom category..."
+                    autoFocus
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 font-medium focus:outline-none focus:border-blue-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setCategory('Product Development')}
+                    className="p-2 text-xs font-bold text-slate-500 hover:text-slate-800 shrink-0"
+                  >
+                    Reset
+                  </button>
+                </div>
+              ) : (
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 font-medium focus:outline-none"
+                >
+                  <option value="Product Development">Product Development</option>
+                  <option value="Mobile Application">Mobile Application</option>
+                  <option value="AI & Data Tech">AI & Data Tech</option>
+                  <option value="Infrastructure">Infrastructure</option>
+                  <option value="Cyber Security">Cyber Security</option>
+                  <option value="CUSTOM">+ Add Custom Category...</option>
+                </select>
+              )}
             </div>
           </div>
 
