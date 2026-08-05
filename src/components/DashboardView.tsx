@@ -350,8 +350,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <Tooltip 
                   formatter={(val: number) => [`${val}%`, 'Progres']}
                   contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', color: '#f8fafc', borderRadius: '8px', fontSize: '12px' }}
+                  itemStyle={{ color: '#facc15', fontWeight: 600 }}
+                  labelStyle={{ color: '#f8fafc', fontWeight: 600 }}
                 />
-                <Bar dataKey="Progress" fill="#6366f1" radius={[0, 6, 6, 0]} barSize={16} />
+                <Bar dataKey="Progress" fill="#a80800" radius={[0, 6, 6, 0]} barSize={16} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -362,21 +364,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <div 
                 key={p.id}
                 onClick={() => onSelectProject(p.id)}
-                className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors"
+                className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors group"
               >
                 <div className="flex items-center gap-2.5 truncate">
                   <span className="text-base">{p.icon}</span>
                   <div>
-                    <div className="text-xs font-bold text-slate-900">{p.name}</div>
+                    <div className="text-xs font-bold text-slate-900 group-hover:text-[#a80800] transition-colors">{p.name}</div>
                     <div className="text-[10px] text-slate-500">{p.category} • Lead: {p.leadName}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-24 bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                    <div className="bg-indigo-600 h-1.5 rounded-full" style={{ width: `${p.progress}%` }} />
+                    <div className="bg-[#a80800] h-1.5 rounded-full" style={{ width: `${p.progress}%` }} />
                   </div>
                   <span className="text-xs font-bold text-slate-700 w-8 text-right">{p.progress}%</span>
-                  <ChevronRight className="w-4 h-4 text-slate-400" />
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#a80800] transition-colors" />
                 </div>
               </div>
             ))}
@@ -452,13 +454,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {activities.map((act) => (
             <div key={act.id} className="p-3 bg-slate-50 border border-slate-200/60 rounded-lg text-xs flex items-start gap-2.5">
-              <div className="p-1.5 bg-blue-100 text-blue-700 rounded-full shrink-0 mt-0.5">
+              <div className="p-1.5 bg-rose-50 text-[#a80800] rounded-full shrink-0 mt-0.5">
                 <Zap className="w-3 h-3" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-slate-800">
                   <strong className="font-semibold text-slate-900">{act.user}</strong> {act.action}{' '}
-                  <span className="text-blue-600 font-medium">{act.target}</span>
+                  <span className="text-[#a80800] font-medium">{act.target}</span>
                 </p>
                 <span className="text-[10px] text-slate-400 mt-1 block">{act.timestamp}</span>
               </div>

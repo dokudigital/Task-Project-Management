@@ -137,6 +137,25 @@ export default function App() {
     }
   };
 
+  const handleUpdateProjectStatus = (projectId: string, newStatus: ProjectStatus) => {
+    const p = projects.find(x => x.id === projectId);
+    if (!p) return;
+    setProjects(prev => prev.map(proj => proj.id === projectId ? { ...proj, status: newStatus } : proj));
+    addActivityLog(currentUser.name, 'updated project status', `${p.name} → ${newStatus.toUpperCase()}`);
+  };
+
+  const handleDeleteProject = (projectId: string) => {
+    const p = projects.find(x => x.id === projectId);
+    if (!p) return;
+    setProjects(prev => prev.filter(proj => proj.id !== projectId));
+    setTasks(prev => prev.filter(t => t.projectId !== projectId));
+    setDocuments(prev => prev.filter(d => d.projectId !== projectId));
+    if (selectedProjectId === projectId) {
+      setSelectedProjectId(null);
+    }
+    addActivityLog(currentUser.name, 'deleted project', p.name);
+  };
+
   const handleUpdateTaskStatus = (taskId: string, newStatus: TaskStatus) => {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
@@ -158,6 +177,34 @@ export default function App() {
         ...p,
         milestones: updatedMilestones,
         progress: calcProgress
+      };
+    }));
+  };
+
+  const handleAddMilestone = (projectId: string, title: string, dueDate: string) => {
+    setProjects(prev => prev.map(p => {
+      if (p.id !== projectId) return p;
+      const newMilestone = {
+        id: `m-${Date.now()}`,
+        title,
+        dueDate: dueDate || new Date().toISOString().split('T')[0],
+        completed: false
+      };
+      const updatedMilestones = [...(p.milestones || []), newMilestone];
+      return {
+        ...p,
+        milestones: updatedMilestones
+      };
+    }));
+  };
+
+  const handleDeleteMilestone = (projectId: string, milestoneId: string) => {
+    setProjects(prev => prev.map(p => {
+      if (p.id !== projectId) return p;
+      const updatedMilestones = (p.milestones || []).filter(m => m.id !== milestoneId);
+      return {
+        ...p,
+        milestones: updatedMilestones
       };
     }));
   };
@@ -237,7 +284,11 @@ export default function App() {
               onUpdateProjectProgress={(id, prog) => {
                 setProjects(prev => prev.map(p => p.id === id ? { ...p, progress: prog } : p));
               }}
+              onUpdateProjectStatus={handleUpdateProjectStatus}
+              onDeleteProject={handleDeleteProject}
               onToggleMilestone={handleToggleMilestone}
+              onAddMilestone={handleAddMilestone}
+              onDeleteMilestone={handleDeleteMilestone}
               onOpenNewTaskModal={(pId) => {
                 setNewTaskDefaultProjectId(pId);
                 setIsNewTaskModalOpen(true);
@@ -272,6 +323,8 @@ export default function App() {
                   projects={projects}
                   tasks={tasks}
                   onSelectProject={(id) => setSelectedProjectId(id)}
+                  onUpdateProjectStatus={handleUpdateProjectStatus}
+                  onDeleteProject={handleDeleteProject}
                   onOpenNewProjectModal={() => setIsNewProjectModalOpen(true)}
                 />
               )}

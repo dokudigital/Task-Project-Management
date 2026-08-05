@@ -15,9 +15,10 @@ import {
   Clock, 
   DollarSign, 
   Tag,
-  Loader2
+  Loader2,
+  Trash2
 } from 'lucide-react';
-import { Project, Task, Document, TaskStatus, TaskPriority } from '../types';
+import { Project, Task, Document, TaskStatus, TaskPriority, ProjectStatus } from '../types';
 
 interface ProjectDetailViewProps {
   project: Project;
@@ -25,7 +26,11 @@ interface ProjectDetailViewProps {
   documents: Document[];
   onBack: () => void;
   onUpdateProjectProgress: (projectId: string, newProgress: number) => void;
+  onUpdateProjectStatus?: (projectId: string, newStatus: ProjectStatus) => void;
+  onDeleteProject?: (projectId: string) => void;
   onToggleMilestone: (projectId: string, milestoneId: string) => void;
+  onAddMilestone?: (projectId: string, title: string, dueDate: string) => void;
+  onDeleteMilestone?: (projectId: string, milestoneId: string) => void;
   onOpenNewTaskModal: (projectId?: string) => void;
   onSelectTask: (task: Task) => void;
   onUpdateTaskStatus: (taskId: string, newStatus: TaskStatus) => void;
@@ -37,12 +42,19 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
   documents,
   onBack,
   onUpdateProjectProgress,
+  onUpdateProjectStatus,
+  onDeleteProject,
   onToggleMilestone,
+  onAddMilestone,
+  onDeleteMilestone,
   onOpenNewTaskModal,
   onSelectTask,
   onUpdateTaskStatus
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'overview' | 'kanban' | 'table' | 'milestones' | 'docs' | 'ai'>('overview');
+  const [isAddingMilestone, setIsAddingMilestone] = useState(false);
+  const [newMilestoneTitle, setNewMilestoneTitle] = useState('');
+  const [newMilestoneDueDate, setNewMilestoneDueDate] = useState('');
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiResult, setAiResult] = useState<string>('');
 
@@ -105,13 +117,27 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
           <span>Back to Projects List</span>
         </button>
 
-        <button
-          onClick={() => onOpenNewTaskModal(project.id)}
-          className="px-3 py-1.5 bg-[#ea1d25] hover:bg-[#c8141b] text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>Add Task to Project</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              if (confirm(`Are you sure you want to delete project "${project.name}"? This action cannot be undone.`)) {
+                onDeleteProject?.(project.id);
+              }
+            }}
+            className="px-3 py-1.5 text-rose-600 hover:bg-rose-50 border border-rose-200 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all"
+            title="Delete Project"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Delete Project</span>
+          </button>
+          <button
+            onClick={() => onOpenNewTaskModal(project.id)}
+            className="px-3 py-1.5 bg-[#ea1d25] hover:bg-[#c8141b] text-white rounded-lg text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Task to Project</span>
+          </button>
+        </div>
       </div>
 
       {/* Project Banner Header */}
@@ -125,6 +151,24 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                   {project.code}
                 </span>
                 <span className="text-xs text-slate-500 font-semibold">{project.category}</span>
+                <select
+                  value={project.status}
+                  onChange={(e) => onUpdateProjectStatus?.(project.id, e.target.value as ProjectStatus)}
+                  className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border cursor-pointer focus:outline-none transition-colors ml-1 ${
+                    project.status === 'active'
+                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                      : project.status === 'planning'
+                      ? 'bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100'
+                      : project.status === 'on_hold'
+                      ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
+                      : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                  }`}
+                >
+                  <option value="planning">Planning</option>
+                  <option value="active">Active</option>
+                  <option value="on_hold">On Hold</option>
+                  <option value="completed">Completed</option>
+                </select>
               </div>
               <h1 className="text-2xl font-bold text-slate-900 mt-1">{project.name}</h1>
               <p className="text-xs text-slate-600 mt-1 max-w-2xl leading-relaxed">
@@ -136,7 +180,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
           <div className="flex flex-col items-end shrink-0">
             <span className="text-xs font-bold text-slate-500">Target Completion Date</span>
             <span className="text-sm font-extrabold text-slate-900 flex items-center gap-1 mt-0.5">
-              <Calendar className="w-4 h-4 text-blue-600" />
+              <Calendar className="w-4 h-4 text-[#a80800]" />
               {project.targetEndDate}
             </span>
           </div>
@@ -220,7 +264,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
               </div>
               <div className="bg-white p-4 rounded-xl border border-slate-200">
                 <span className="text-[10px] font-bold uppercase text-slate-400">Overall Progress</span>
-                <div className="text-2xl font-extrabold text-blue-600 mt-1">{project.progress}%</div>
+                <div className="text-2xl font-extrabold text-[#a80800] mt-1">{project.progress}%</div>
               </div>
               <div className="bg-white p-4 rounded-xl border border-slate-200">
                 <span className="text-[10px] font-bold uppercase text-slate-400">Project Budget</span>
@@ -232,19 +276,80 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
 
             {/* Milestones Card */}
             <div className="bg-white p-5 rounded-xl border border-slate-200">
-              <h3 className="font-bold text-slate-900 text-sm mb-3 flex items-center justify-between">
-                <span>Key Milestones List</span>
-                <span className="text-xs text-slate-500 font-normal">Click to toggle status</span>
-              </h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-slate-900 text-sm">Key Milestones List</h3>
+                <button
+                  onClick={() => setIsAddingMilestone(!isAddingMilestone)}
+                  className="text-xs text-[#a80800] hover:text-[#800600] font-bold flex items-center gap-1"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{isAddingMilestone ? 'Cancel' : 'Add Milestone'}</span>
+                </button>
+              </div>
+
+              {isAddingMilestone && (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!newMilestoneTitle.trim()) return;
+                    onAddMilestone?.(project.id, newMilestoneTitle.trim(), newMilestoneDueDate || project.targetEndDate);
+                    setNewMilestoneTitle('');
+                    setNewMilestoneDueDate('');
+                    setIsAddingMilestone(false);
+                  }}
+                  className="mb-3 p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2 text-xs"
+                >
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Milestone Title</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. System Integration Testing"
+                      value={newMilestoneTitle}
+                      onChange={(e) => setNewMilestoneTitle(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded p-1.5 text-slate-900 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Due Date</label>
+                    <input
+                      type="date"
+                      value={newMilestoneDueDate}
+                      onChange={(e) => setNewMilestoneDueDate(e.target.value)}
+                      className="w-full bg-white border border-slate-200 rounded p-1.5 text-slate-900 focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingMilestone(false)}
+                      className="px-2.5 py-1 text-slate-600 hover:bg-slate-200 rounded font-medium"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-3 py-1 bg-[#a80800] hover:bg-[#800600] text-white rounded font-bold"
+                    >
+                      Save Milestone
+                    </button>
+                  </div>
+                </form>
+              )}
 
               <div className="space-y-2">
+                {project.milestones?.length === 0 && (
+                  <p className="text-xs text-slate-400 italic">No milestones defined yet.</p>
+                )}
                 {project.milestones?.map((m) => (
                   <div
                     key={m.id}
-                    onClick={() => onToggleMilestone(project.id, m.id)}
-                    className="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200/80 cursor-pointer transition-colors"
+                    className="flex items-center justify-between p-3 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200/80 transition-colors group"
                   >
-                    <div className="flex items-center gap-3">
+                    <div
+                      onClick={() => onToggleMilestone(project.id, m.id)}
+                      className="flex items-center gap-3 cursor-pointer flex-1"
+                    >
                       {m.completed ? (
                         <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
                       ) : (
@@ -255,9 +360,23 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                       </span>
                     </div>
 
-                    <span className="text-[11px] font-medium text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
-                      Due: {m.dueDate}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-medium text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
+                        Due: {m.dueDate}
+                      </span>
+                      {onDeleteMilestone && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteMilestone(project.id, m.id);
+                          }}
+                          className="p-1 text-slate-300 hover:text-rose-600 rounded transition-colors opacity-0 group-hover:opacity-100"
+                          title="Delete Milestone"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

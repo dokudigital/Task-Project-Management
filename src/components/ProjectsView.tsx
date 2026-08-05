@@ -10,7 +10,8 @@ import {
   AlertCircle, 
   Clock, 
   ChevronRight,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Trash2
 } from 'lucide-react';
 import { Project, Task, ProjectStatus } from '../types';
 
@@ -18,6 +19,8 @@ interface ProjectsViewProps {
   projects: Project[];
   tasks: Task[];
   onSelectProject: (projectId: string) => void;
+  onUpdateProjectStatus?: (projectId: string, newStatus: ProjectStatus) => void;
+  onDeleteProject?: (projectId: string) => void;
   onOpenNewProjectModal: () => void;
 }
 
@@ -25,6 +28,8 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
   projects,
   tasks,
   onSelectProject,
+  onUpdateProjectStatus,
+  onDeleteProject,
   onOpenNewProjectModal
 }) => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -137,12 +142,43 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
                     <span className="text-2xl p-2 bg-slate-100 rounded-lg group-hover:scale-105 transition-transform">{p.icon}</span>
                     <div>
                       <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">{p.code}</span>
-                      <h3 className="font-bold text-slate-900 text-base leading-snug group-hover:text-blue-600 transition-colors">
+                      <h3 className="font-bold text-slate-900 text-base leading-snug group-hover:text-[#a80800] transition-colors">
                         {p.name}
                       </h3>
                     </div>
                   </div>
-                  {getStatusBadge(p.status)}
+                  <div onClick={(e) => e.stopPropagation()} className="shrink-0 flex items-center gap-1.5">
+                    <select
+                      value={p.status}
+                      onChange={(e) => onUpdateProjectStatus?.(p.id, e.target.value as ProjectStatus)}
+                      className={`text-xs font-semibold px-2 py-1 rounded-lg border cursor-pointer focus:outline-none transition-colors ${
+                        p.status === 'active'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                          : p.status === 'planning'
+                          ? 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100'
+                          : p.status === 'on_hold'
+                          ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
+                          : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                      }`}
+                    >
+                      <option value="planning">Planning</option>
+                      <option value="active">Active</option>
+                      <option value="on_hold">On Hold</option>
+                      <option value="completed">Completed</option>
+                    </select>
+
+                    <button
+                      onClick={() => {
+                        if (confirm(`Are you sure you want to delete project "${p.name}"? This action cannot be undone.`)) {
+                          onDeleteProject?.(p.id);
+                        }
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                      title="Delete Project"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed mb-4">
@@ -157,7 +193,7 @@ export const ProjectsView: React.FC<ProjectsViewProps> = ({
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
                     <div
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      className="bg-[#a80800] h-2 rounded-full transition-all duration-300"
                       style={{ width: `${p.progress}%` }}
                     />
                   </div>
