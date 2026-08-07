@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ActiveTab, 
   Project, 
@@ -6,7 +6,8 @@ import {
   User, 
   Document, 
   ActivityLog, 
-  TaskStatus 
+  TaskStatus,
+  ProjectStatus
 } from './types';
 import { 
   INITIAL_PROJECTS, 
@@ -15,6 +16,24 @@ import {
   INITIAL_DOCUMENTS, 
   INITIAL_ACTIVITIES 
 } from './data/initialData';
+
+import {
+  seedInitialDataIfEmpty,
+  subscribeUsers,
+  subscribeProjects,
+  subscribeTasks,
+  subscribeDocuments,
+  subscribeActivities,
+  saveUserToFirestore,
+  deleteUserFromFirestore,
+  saveProjectToFirestore,
+  deleteProjectFromFirestore,
+  saveTaskToFirestore,
+  deleteTaskFromFirestore,
+  saveDocumentToFirestore,
+  deleteDocumentFromFirestore,
+  addActivityToFirestore
+} from './lib/firestoreService';
 
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
@@ -47,14 +66,62 @@ export default function App() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
+  // Firebase Firestore Realtime Subscriptions
+  useEffect(() => {
+    seedInitialDataIfEmpty();
+
+    const unsubUsers = subscribeUsers((data) => {
+      if (data.length > 0) setUsers(data);
+    });
+    const unsubProjects = subscribeProjects((data) => {
+      if (data.length > 0) setProjects(data);
+    });
+    const unsubTasks = subscribeTasks((data) => {
+      if (data.length > 0) setTasks(data);
+    });
+    const unsubDocs = subscribeDocuments((data) => {
+      if (data.length > 0) setDocuments(data);
+    });
+    const unsubActivities = subscribeActivities((data) => {
+      if (data.length > 0) setActivities(data);
+    });
+
+    return () => {
+      unsubUsers();
+      unsubProjects();
+      unsubTasks();
+      unsubDocs();
+      unsubActivities();
+    };
+  }, []);
+
   // Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return localStorage.getItem('doku_auth') === 'true';
   });
 
+  // Dark Mode Theme State
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    return localStorage.getItem('doku_theme') === 'dark';
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('doku_theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('doku_theme', 'light');
+    }
+  }, [isDarkMode]);
+
+  const handleToggleDarkMode = () => {
+    setIsDarkMode(prev => !prev);
+  };
+
   const [currentUser, setCurrentUser] = useState<User>(() => {
     const savedUserId = localStorage.getItem('doku_user_id');
-    const savedUser = INITIAL_USERS.find(u => u.id === savedUserId);
+    const savedUser = users.find(u => u.id === savedUserId) || INITIAL_USERS.find(u => u.id === savedUserId);
     return savedUser || INITIAL_USERS[0];
   });
 
@@ -85,21 +152,25 @@ export default function App() {
   // Handlers
   const handleCreateProject = (newProject: Project) => {
     setProjects(prev => [newProject, ...prev]);
+    saveProjectToFirestore(newProject);
     addActivityLog(currentUser.name, 'membuat proyek baru', newProject.name);
   };
 
   const handleCreateTask = (newTask: Task) => {
     setTasks(prev => [newTask, ...prev]);
+    saveTaskToFirestore(newTask);
     addActivityLog(currentUser.name, 'membuat tugas baru', newTask.title);
   };
 
   const handleCreateUser = (newUser: User) => {
     setUsers(prev => [...prev, newUser]);
+    saveUserToFirestore(newUser);
     addActivityLog(currentUser.name, 'menambahkan anggota tim baru', `${newUser.name} (${newUser.title})`);
   };
 
   const handleUpdateUser = (updatedUser: User) => {
     setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+    saveUserToFirestore(updatedUser);
     if (currentUser.id === updatedUser.id) {
       setCurrentUser(updatedUser);
     }
@@ -109,6 +180,7 @@ export default function App() {
   const handleDeleteUser = (userId: string) => {
     const u = users.find(x => x.id === userId);
     setUsers(prev => prev.filter(x => x.id !== userId));
+    deleteUserFromFirestore(userId);
     if (u) {
       addActivityLog(currentUser.name, 'menghapus user', u.name);
     }
@@ -116,12 +188,14 @@ export default function App() {
 
   const handleCreateDoc = (newDoc: Document) => {
     setDocuments(prev => [newDoc, ...prev]);
+    saveDocumentToFirestore(newDoc);
     addActivityLog(currentUser.name, 'membuat dokumen baru', newDoc.title);
   };
 
   const handleUpdateTask = (updatedTask: Task) => {
     setTasks(prev => prev.map(t => t.id === updatedTask.id ? updatedTask : t));
     setSelectedTask(updatedTask);
+    saveTaskToFirestore(updatedTask);
 
     // Auto-update project progress
     updateProjectProgressFromTasks(updatedTask.projectId);
@@ -130,6 +204,7 @@ export default function App() {
   const handleDeleteTask = (taskId: string) => {
     const t = tasks.find(x => x.id === taskId);
     setTasks(prev => prev.filter(x => x.id !== taskId));
+    deleteTaskFromFirestore(taskId);
     setSelectedTask(null);
     if (t) {
       addActivityLog(currentUser.name, 'menghapus tugas', t.title);
@@ -140,7 +215,9 @@ export default function App() {
   const handleUpdateProjectStatus = (projectId: string, newStatus: ProjectStatus) => {
     const p = projects.find(x => x.id === projectId);
     if (!p) return;
-    setProjects(prev => prev.map(proj => proj.id === projectId ? { ...proj, status: newStatus } : proj));
+    const updatedProj = { ...p, status: newStatus };
+    setProjects(prev => prev.map(proj => proj.id === projectId ? updatedProj : proj));
+    saveProjectToFirestore(updatedProj);
     addActivityLog(currentUser.name, 'updated project status', `${p.name} → ${newStatus.toUpperCase()}`);
   };
 
@@ -150,6 +227,7 @@ export default function App() {
     setProjects(prev => prev.filter(proj => proj.id !== projectId));
     setTasks(prev => prev.filter(t => t.projectId !== projectId));
     setDocuments(prev => prev.filter(d => d.projectId !== projectId));
+    deleteProjectFromFirestore(projectId);
     if (selectedProjectId === projectId) {
       setSelectedProjectId(null);
     }
@@ -162,6 +240,7 @@ export default function App() {
 
     const updated = { ...task, status: newStatus, updatedAt: new Date().toISOString() };
     setTasks(prev => prev.map(t => t.id === taskId ? updated : t));
+    saveTaskToFirestore(updated);
     addActivityLog(currentUser.name, 'memperbarui status tugas', `${task.title} → ${newStatus.toUpperCase()}`);
     updateProjectProgressFromTasks(task.projectId);
   };
@@ -173,11 +252,13 @@ export default function App() {
       const completedCount = updatedMilestones.filter(m => m.completed).length;
       const calcProgress = updatedMilestones.length > 0 ? Math.round((completedCount / updatedMilestones.length) * 100) : p.progress;
 
-      return {
+      const updatedProj = {
         ...p,
         milestones: updatedMilestones,
         progress: calcProgress
       };
+      saveProjectToFirestore(updatedProj);
+      return updatedProj;
     }));
   };
 
@@ -191,10 +272,12 @@ export default function App() {
         completed: false
       };
       const updatedMilestones = [...(p.milestones || []), newMilestone];
-      return {
+      const updatedProj = {
         ...p,
         milestones: updatedMilestones
       };
+      saveProjectToFirestore(updatedProj);
+      return updatedProj;
     }));
   };
 
@@ -202,10 +285,12 @@ export default function App() {
     setProjects(prev => prev.map(p => {
       if (p.id !== projectId) return p;
       const updatedMilestones = (p.milestones || []).filter(m => m.id !== milestoneId);
-      return {
+      const updatedProj = {
         ...p,
         milestones: updatedMilestones
       };
+      saveProjectToFirestore(updatedProj);
+      return updatedProj;
     }));
   };
 
@@ -215,18 +300,23 @@ export default function App() {
     const doneCount = pTasks.filter(t => t.status === 'done').length;
     const calcProgress = Math.round((doneCount / pTasks.length) * 100);
 
-    setProjects(prev => prev.map(p => p.id === projId ? { ...p, progress: calcProgress } : p));
+    setProjects(prev => prev.map(p => {
+      if (p.id === projId) {
+        const updatedProj = { ...p, progress: calcProgress };
+        saveProjectToFirestore(updatedProj);
+        return updatedProj;
+      }
+      return p;
+    }));
   };
 
   const addActivityLog = (user: string, action: string, target: string) => {
-    const newAct: ActivityLog = {
-      id: `act-${Date.now()}`,
+    addActivityToFirestore({
       user,
       action,
       target,
       timestamp: 'Baru saja'
-    };
-    setActivities(prev => [newAct, ...prev]);
+    });
   };
 
   if (!isAuthenticated) {
@@ -272,6 +362,8 @@ export default function App() {
           onOpenNewUserModal={() => setIsNewUserModalOpen(true)}
           onExportReport={() => printExecutiveReport(projects, tasks, users)}
           onOpenAiAssistant={() => setIsAiAssistantOpen(true)}
+          isDarkMode={isDarkMode}
+          onToggleDarkMode={handleToggleDarkMode}
         />
 
         {/* View Content Body */}

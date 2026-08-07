@@ -1,0 +1,92 @@
+{
+  "entities": {
+    "projects": {
+      "title": "Projects",
+      "description": "Project management records",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "code": { "type": "string" },
+        "icon": { "type": "string" },
+        "color": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string" },
+        "leadId": { "type": "string" },
+        "leadName": { "type": "string" },
+        "memberIds": { "type": "array" },
+        "category": { "type": "string" },
+        "startDate": { "type": "string" },
+        "targetEndDate": { "type": "string" },
+        "budget": { "type": "number" },
+        "progress": { "type": "number" },
+        "milestones": { "type": "array" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "tasks": {
+      "title": "Tasks",
+      "description": "Task items across projects",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "projectId": { "type": "string" },
+        "projectName": { "type": "string" },
+        "status": { "type": "string" },
+        "priority": { "type": "string" },
+        "assigneeId": { "type": "string" },
+        "assigneeName": { "type": "string" },
+        "assigneeAvatar": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "startDate": { "type": "string" },
+        "tags": { "type": "array" },
+        "estimatedHours": { "type": "number" },
+        "actualHours": { "type": "number" },
+        "subtasks": { "type": "array" },
+        "comments": { "type": "array" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      }
+    },
+    "users": {
+      "title": "Users",
+      "description": "User accounts and team members",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "password": { "type": "string" },
+        "role": { "type": "string" },
+        "department": { "type": "string" },
+        "avatarUrl": { "type": "string" },
+        "title": { "type": "string" }
+      }
+    },
+    "documents": {
+      "title": "Documents",
+      "description": "Project documents and specs",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "icon": { "type": "string" },
+        "content": { "type": "string" },
+        "projectId": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "tags": { "type": "array" },
+        "updatedAt": { "type": "string" }
+      }
+    },
+    "activities": {
+      "title": "Activities",
+      "description": "Activity logs",
+      "properties": {
+        "id": { "type": "string" },
+        "user": { "type": "string" },
+        "action": { "type": "string" },
+        "target": { "type": "string" },
+        "timestamp": { "type": "string" }
+      }
+    }
+  }
+}

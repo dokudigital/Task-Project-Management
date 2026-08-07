@@ -16,7 +16,8 @@ import {
   DollarSign, 
   Tag,
   Loader2,
-  Trash2
+  Trash2,
+  GripVertical
 } from 'lucide-react';
 import { Project, Task, Document, TaskStatus, TaskPriority, ProjectStatus } from '../types';
 
@@ -57,6 +58,8 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
   const [newMilestoneDueDate, setNewMilestoneDueDate] = useState('');
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiResult, setAiResult] = useState<string>('');
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [dragOverCol, setDragOverCol] = useState<TaskStatus | null>(null);
 
   const projectTasks = tasks.filter(t => t.projectId === project.id);
   const projectDocs = documents.filter(d => d.projectId === project.id);
@@ -426,35 +429,93 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
               todo: 'To Do',
               in_progress: 'In Progress',
               in_review: 'In Review',
-              done: 'Done / Selesai'
+              done: 'Done / Completed'
             };
 
+            const isColumnHovered = dragOverCol === colStatus;
+
             return (
-              <div key={colStatus} className="bg-slate-100/80 p-3 rounded-xl border border-slate-200 min-h-[400px]">
+              <div
+                key={colStatus}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                  if (dragOverCol !== colStatus) setDragOverCol(colStatus);
+                }}
+                onDragLeave={(e) => {
+                  if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+                  setDragOverCol(null);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const taskId = e.dataTransfer.getData('text/plain') || draggedTaskId;
+                  if (taskId) {
+                    onUpdateTaskStatus(taskId, colStatus);
+                  }
+                  setDraggedTaskId(null);
+                  setDragOverCol(null);
+                }}
+                className={`bg-slate-100/80 p-3 rounded-xl border transition-all min-h-[400px] flex flex-col ${
+                  isColumnHovered
+                    ? 'border-[#a80800] ring-2 ring-[#a80800]/30 bg-rose-50/40 dark:bg-rose-950/20'
+                    : 'border-slate-200'
+                }`}
+              >
                 <div className="flex items-center justify-between mb-3 px-1">
                   <span className="text-xs font-bold text-slate-700 uppercase">{colTitles[colStatus]}</span>
                   <span className="text-xs font-bold bg-slate-200 px-2 py-0.5 rounded-full text-slate-600">{colTasks.length}</span>
                 </div>
 
-                <div className="space-y-3">
-                  {colTasks.map(t => (
-                    <div
-                      key={t.id}
-                      onClick={() => onSelectTask(t)}
-                      className="bg-white p-3 rounded-lg border border-slate-200 shadow-2xs hover:shadow-md cursor-pointer transition-all"
-                    >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[10px] font-semibold text-slate-400">{t.id}</span>
-                        {getPriorityBadge(t.priority)}
-                      </div>
-                      <h4 className="text-xs font-bold text-slate-900 leading-snug mb-2">{t.title}</h4>
-                      
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[10px] text-slate-500">
-                        <span>{t.assigneeName}</span>
-                        <span>{t.dueDate}</span>
-                      </div>
+                {isColumnHovered && (
+                  <div className="mb-2 p-2 rounded-lg border-2 border-dashed border-[#a80800]/40 text-center text-xs font-semibold text-[#a80800] bg-rose-50/60 dark:bg-rose-900/20">
+                    Drop task here
+                  </div>
+                )}
+
+                <div className="space-y-3 flex-1">
+                  {colTasks.length === 0 && !isColumnHovered && (
+                    <div className="h-24 flex items-center justify-center border-2 border-dashed border-slate-200/80 rounded-lg text-xs text-slate-400">
+                      No tasks in this column
                     </div>
-                  ))}
+                  )}
+
+                  {colTasks.map(t => {
+                    const isBeingDragged = draggedTaskId === t.id;
+
+                    return (
+                      <div
+                        key={t.id}
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData('text/plain', t.id);
+                          e.dataTransfer.effectAllowed = 'move';
+                          setDraggedTaskId(t.id);
+                        }}
+                        onDragEnd={() => {
+                          setDraggedTaskId(null);
+                          setDragOverCol(null);
+                        }}
+                        onClick={() => onSelectTask(t)}
+                        className={`group bg-white p-3 rounded-lg border border-slate-200 shadow-2xs hover:shadow-md cursor-grab active:cursor-grabbing transition-all ${
+                          isBeingDragged ? 'opacity-40 scale-[0.98] ring-2 ring-[#a80800]' : ''
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-1">
+                            <GripVertical className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-400 shrink-0" />
+                            <span className="text-[10px] font-semibold text-slate-400">{t.id}</span>
+                          </div>
+                          {getPriorityBadge(t.priority)}
+                        </div>
+                        <h4 className="text-xs font-bold text-slate-900 leading-snug mb-2">{t.title}</h4>
+                        
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[10px] text-slate-500">
+                          <span>{t.assigneeName}</span>
+                          <span>{t.dueDate}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );

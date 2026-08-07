@@ -14,9 +14,11 @@ import {
   User, 
   Tag, 
   ChevronRight,
-  Sparkles
+  Sparkles,
+  GripVertical
 } from 'lucide-react';
 import { Task, Project, User as UserType, TaskStatus, TaskPriority, TaskViewMode } from '../types';
+import { CalendarView } from './CalendarView';
 
 interface TasksViewProps {
   tasks: Task[];
@@ -41,6 +43,8 @@ export const TasksView: React.FC<TasksViewProps> = ({
   const [selectedAssigneeId, setSelectedAssigneeId] = useState<string>('all');
   const [selectedPriority, setSelectedPriority] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [dragOverCol, setDragOverCol] = useState<TaskStatus | null>(null);
 
   // Filter logic
   const filteredTasks = tasks.filter(t => {
@@ -79,7 +83,7 @@ export const TasksView: React.FC<TasksViewProps> = ({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 rounded-xl border border-slate-200 shadow-2xs">
         <div>
           <h2 className="text-xl font-bold text-slate-900">Task Management Hub</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Manage team tasks with Kanban board, Database Table, or List views</p>
+          <p className="text-xs text-slate-500 mt-0.5">Manage team tasks with Kanban board, Calendar, Database Table, or List views</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -93,6 +97,16 @@ export const TasksView: React.FC<TasksViewProps> = ({
             >
               <LayoutGrid className="w-3.5 h-3.5" />
               <span>Kanban</span>
+            </button>
+
+            <button
+              onClick={() => setViewMode('calendar')}
+              className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1.5 transition-all ${
+                viewMode === 'calendar' ? 'bg-[#ea1d25] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <CalendarIcon className="w-3.5 h-3.5" />
+              <span>Calendar</span>
             </button>
 
             <button
@@ -205,28 +219,85 @@ export const TasksView: React.FC<TasksViewProps> = ({
               done: 'Done / Completed'
             };
 
+            const isColumnHovered = dragOverCol === colStatus;
+
             return (
-              <div key={colStatus} className="bg-slate-100/90 p-3 rounded-xl border border-slate-200 min-h-[500px]">
+              <div
+                key={colStatus}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = 'move';
+                  if (dragOverCol !== colStatus) setDragOverCol(colStatus);
+                }}
+                onDragLeave={(e) => {
+                  if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+                  setDragOverCol(null);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const taskId = e.dataTransfer.getData('text/plain') || draggedTaskId;
+                  if (taskId) {
+                    onUpdateTaskStatus(taskId, colStatus);
+                  }
+                  setDraggedTaskId(null);
+                  setDragOverCol(null);
+                }}
+                className={`bg-slate-100/90 p-3 rounded-xl border transition-all min-h-[500px] flex flex-col ${
+                  isColumnHovered
+                    ? 'border-[#a80800] ring-2 ring-[#a80800]/30 bg-rose-50/40 dark:bg-rose-950/20'
+                    : 'border-slate-200'
+                }`}
+              >
                 <div className="flex items-center justify-between mb-3 px-1">
-                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">{colTitles[colStatus]}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">{colTitles[colStatus]}</span>
+                  </div>
                   <span className="text-xs font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full">{colTasks.length}</span>
                 </div>
 
-                <div className="space-y-3">
+                {isColumnHovered && (
+                  <div className="mb-2 p-2 rounded-lg border-2 border-dashed border-[#a80800]/40 text-center text-xs font-semibold text-[#a80800] bg-rose-50/60 dark:bg-rose-900/20">
+                    Drop task here
+                  </div>
+                )}
+
+                <div className="space-y-3 flex-1">
+                  {colTasks.length === 0 && !isColumnHovered && (
+                    <div className="h-28 flex items-center justify-center border-2 border-dashed border-slate-200/80 rounded-xl text-xs text-slate-400">
+                      No tasks in this column
+                    </div>
+                  )}
+
                   {colTasks.map(t => {
                     const completedSubs = t.subtasks?.filter(s => s.completed).length || 0;
                     const totalSubs = t.subtasks?.length || 0;
+                    const isBeingDragged = draggedTaskId === t.id;
 
                     return (
                       <div
                         key={t.id}
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData('text/plain', t.id);
+                          e.dataTransfer.effectAllowed = 'move';
+                          setDraggedTaskId(t.id);
+                        }}
+                        onDragEnd={() => {
+                          setDraggedTaskId(null);
+                          setDragOverCol(null);
+                        }}
                         onClick={() => onSelectTask(t)}
-                        className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs hover:shadow-md cursor-pointer transition-all space-y-2.5 hover:border-slate-300"
+                        className={`group bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs hover:shadow-md cursor-grab active:cursor-grabbing transition-all space-y-2.5 hover:border-slate-300 relative ${
+                          isBeingDragged ? 'opacity-40 scale-[0.98] ring-2 ring-[#a80800]' : ''
+                        }`}
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded truncate">
-                            {t.projectName}
-                          </span>
+                          <div className="flex items-center gap-1 min-w-0">
+                            <GripVertical className="w-3.5 h-3.5 text-slate-300 group-hover:text-slate-400 shrink-0" />
+                            <span className="text-[10px] font-bold text-[#a80800] bg-rose-50 border border-rose-100/80 px-2 py-0.5 rounded truncate">
+                              {t.projectName}
+                            </span>
+                          </div>
                           {getPriorityBadge(t.priority)}
                         </div>
 
@@ -260,7 +331,16 @@ export const TasksView: React.FC<TasksViewProps> = ({
         </div>
       )}
 
-      {/* VIEW MODE 2: DATABASE TABLE */}
+      {/* VIEW MODE 2: CALENDAR VIEW */}
+      {viewMode === 'calendar' && (
+        <CalendarView
+          tasks={filteredTasks}
+          onSelectTask={onSelectTask}
+          onOpenNewTaskModal={onOpenNewTaskModal}
+        />
+      )}
+
+      {/* VIEW MODE 3: DATABASE TABLE */}
       {viewMode === 'table' && (
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-2xs">
           <table className="w-full text-left text-xs">
@@ -279,7 +359,7 @@ export const TasksView: React.FC<TasksViewProps> = ({
                 <tr key={t.id} className="hover:bg-slate-50/80 transition-colors">
                   <td 
                     onClick={() => onSelectTask(t)}
-                    className="p-3 font-semibold text-slate-900 cursor-pointer hover:text-blue-600"
+                    className="p-3 font-semibold text-slate-900 cursor-pointer hover:text-[#a80800]"
                   >
                     {t.title}
                   </td>

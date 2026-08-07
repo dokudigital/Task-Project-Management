@@ -147,7 +147,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         {/* Header Bar */}
         <div className="p-5 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded">
+            <span className="text-xs font-bold text-[#a80800] bg-rose-50 border border-rose-100 px-2.5 py-1 rounded">
               {task.projectName}
             </span>
             <span className="text-xs text-slate-400">ID: {task.id}</span>

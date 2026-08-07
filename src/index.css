@@ -1,1 +1,141 @@
 @import "tailwindcss";
+
+:root {
+  --bg-app: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-hover: #f1f5f9;
+  --bg-card-list: #f8fafc;
+  --bg-muted: #f8fafc;
+  --border-color: #e2e8f0;
+  --border-subtle: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --header-bg: #ffffff;
+  --card-bg: #ffffff;
+  --modal-bg: #ffffff;
+  --input-bg: #f8fafc;
+  color-scheme: light;
+}
+
+.dark {
+  --bg-app: #0f0f0f;
+  --bg-surface: #1f1f1f;
+  --bg-surface-hover: #2a2a2a;
+  --bg-card-list: #333333;
+  --bg-muted: #1f1f1f;
+  --border-color: #2e2e2e;
+  --border-subtle: #242424;
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+  --header-bg: #1f1f1f;
+  --card-bg: #1f1f1f;
+  --modal-bg: #1f1f1f;
+  --input-bg: #2a2a2a;
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Dark mode theme overrides for consistent application palette */
+.dark body,
+.dark main {
+  background-color: #0f0f0f !important;
+  color: #f9fafb !important;
+}
+
+.dark header {
+  background-color: #1f1f1f !important;
+  border-color: #2e2e2e !important;
+}
+
+.dark aside,
+.dark nav {
+  background-color: #1f1f1f !important;
+  border-color: #2e2e2e !important;
+}
+
+/* Main Cards in Dark Mode (#1f1f1f) */
+.dark .bg-white {
+  background-color: #1f1f1f !important;
+  color: #f9fafb;
+}
+
+/* Card List items in Dark Mode (#333333) - e.g. Upcoming Deadlines, Activity, Milestones, Project Tasks */
+.dark .bg-slate-50 {
+  background-color: #333333 !important;
+  color: #f9fafb !important;
+}
+
+.dark .bg-slate-100 {
+  background-color: #2a2a2a !important;
+  color: #e5e7eb !important;
+}
+
+/* Kanban column box container in Dark Mode (#1f1f1f) */
+.dark .bg-slate-100\/90,
+.dark .bg-slate-100\/80,
+.dark .bg-slate-100\/50 {
+  background-color: #1a1a1a !important;
+  border-color: #2e2e2e !important;
+}
+
+/* Hover state on list items in Dark Mode (#3e3e3e instead of white) */
+.dark .hover\:bg-slate-50:hover,
+.dark .hover\:bg-slate-100:hover,
+.dark .hover\:bg-slate-100\/80:hover {
+  background-color: #3e3e3e !important;
+}
+
+/* Borders in Dark Mode */
+.dark .border-slate-100,
+.dark .border-slate-200,
+.dark .border-slate-200\/80,
+.dark .border-slate-200\/60 {
+  border-color: #2e2e2e !important;
+}
+
+/* Text colors in Dark Mode */
+.dark .text-slate-900,
+.dark .text-slate-800 {
+  color: #f9fafb !important;
+}
+
+.dark .text-slate-700,
+.dark .text-slate-600 {
+  color: #d1d5db !important;
+}
+
+.dark .text-slate-500 {
+  color: #9ca3af !important;
+}
+
+.dark .text-slate-400 {
+  color: #8892b0 !important;
+}
+
+.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #2e2e2e !important;
+}
+
+/* Inputs and Selects in Dark Mode */
+.dark input[type="text"],
+.dark input[type="search"],
+.dark input[type="date"],
+.dark textarea,
+.dark select {
+  background-color: #2a2a2a !important;
+  color: #f9fafb !important;
+  border-color: #3e3e3e !important;
+}
+
+.dark ::placeholder {
+  color: #8892b0 !important;
+}
+
