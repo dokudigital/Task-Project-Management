@@ -17,7 +17,11 @@ import {
   Tag,
   Loader2,
   Trash2,
-  GripVertical
+  GripVertical,
+  GitCommit,
+  Globe,
+  ExternalLink,
+  CalendarDays
 } from 'lucide-react';
 import { Project, Task, Document, TaskStatus, TaskPriority, ProjectStatus } from '../types';
 
@@ -52,7 +56,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
   onSelectTask,
   onUpdateTaskStatus
 }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'overview' | 'kanban' | 'table' | 'milestones' | 'docs' | 'ai'>('overview');
+  const [activeSubTab, setActiveSubTab] = useState<'overview' | 'kanban' | 'table' | 'timeline' | 'milestones' | 'docs' | 'ai'>('overview');
   const [isAddingMilestone, setIsAddingMilestone] = useState(false);
   const [newMilestoneTitle, setNewMilestoneTitle] = useState('');
   const [newMilestoneDueDate, setNewMilestoneDueDate] = useState('');
@@ -101,10 +105,35 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
 
   const getPriorityBadge = (priority: TaskPriority) => {
     switch (priority) {
-      case 'urgent': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700">URGENT</span>;
-      case 'high': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700">HIGH</span>;
-      case 'medium': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">MEDIUM</span>;
-      case 'low': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">LOW</span>;
+      case 'urgent': 
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300 shadow-2xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping" />
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-600 -ml-3" />
+            URGENT
+          </span>
+        );
+      case 'high': 
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300/80">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            HIGH
+          </span>
+        );
+      case 'medium': 
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+            MEDIUM
+          </span>
+        );
+      case 'low': 
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+            LOW
+          </span>
+        );
     }
   };
 
@@ -219,6 +248,16 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
           >
             <TableIcon className="w-3.5 h-3.5" />
             <span>Database Table</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('timeline')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 ${
+              activeSubTab === 'timeline' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <CalendarDays className="w-3.5 h-3.5 text-rose-500" />
+            <span>Timeline</span>
           </button>
 
           <button
@@ -532,6 +571,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                 <th className="p-3">Task Title</th>
                 <th className="p-3">Assignee</th>
                 <th className="p-3">Priority</th>
+                <th className="p-3">URL / Landing Page</th>
                 <th className="p-3">Status</th>
                 <th className="p-3">Due Date</th>
               </tr>
@@ -547,6 +587,23 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                   </td>
                   <td className="p-3 text-slate-700">{t.assigneeName}</td>
                   <td className="p-3">{getPriorityBadge(t.priority)}</td>
+                  <td className="p-3">
+                    {t.url ? (
+                      <a
+                        href={t.url.startsWith('http') ? t.url : `https://${t.url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-[#ea1d25] hover:underline bg-rose-50 border border-rose-200 px-2 py-0.5 rounded max-w-[160px] truncate"
+                        title={t.url}
+                      >
+                        <Globe className="w-3 h-3 shrink-0" />
+                        <span className="truncate">{t.url.replace(/^https?:\/\//, '')}</span>
+                        <ExternalLink className="w-2.5 h-2.5 shrink-0" />
+                      </a>
+                    ) : (
+                      <span className="text-slate-300 text-[11px] font-mono">-</span>
+                    )}
+                  </td>
                   <td className="p-3">
                     <select
                       value={t.status}
@@ -567,7 +624,157 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
         </div>
       )}
 
-      {/* 4. AI SPEC SUBTAB */}
+      {/* 4. TIMELINE SUBTAB */}
+      {activeSubTab === 'timeline' && (
+        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-2xs space-y-6">
+          {/* Header & Controls */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                <CalendarDays className="w-5 h-5 text-[#ea1d25]" />
+                <span>Project Gantt & Roadmap Timeline</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Visual Schedule & Workstreams for {project.name} ({project.startDate || '2026-08-01'} to {project.targetEndDate})
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 text-xs font-semibold">
+              <span className="flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-200">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" /> Done
+              </span>
+              <span className="flex items-center gap-1 text-amber-700 bg-amber-50 px-2 py-1 rounded border border-amber-200">
+                <span className="w-2 h-2 rounded-full bg-amber-500" /> In Progress
+              </span>
+              <span className="flex items-center gap-1 text-slate-700 bg-slate-100 px-2 py-1 rounded border border-slate-200">
+                <span className="w-2 h-2 rounded-full bg-slate-400" /> To Do
+              </span>
+            </div>
+          </div>
+
+          {/* Project Milestones Banner in Timeline */}
+          {project.milestones && project.milestones.length > 0 && (
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+              <div className="text-[11px] font-extrabold uppercase text-slate-500 tracking-wider flex items-center gap-1.5">
+                <GitCommit className="w-4 h-4 text-rose-600" />
+                <span>Key Milestones Schedule</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                {project.milestones.map(m => (
+                  <div 
+                    key={m.id}
+                    className={`p-2.5 rounded-lg border text-xs flex items-center justify-between transition-colors ${
+                      m.completed 
+                        ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900' 
+                        : 'bg-white border-slate-200 text-slate-800'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <input
+                        type="checkbox"
+                        checked={m.completed}
+                        onChange={() => onToggleMilestone(project.id, m.id)}
+                        className="rounded text-emerald-600 focus:ring-0 cursor-pointer"
+                      />
+                      <span className={`font-bold truncate ${m.completed ? 'line-through text-emerald-700' : ''}`}>
+                        {m.title}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200 shrink-0 ml-2">
+                      {m.dueDate}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Timeline Schedule Table / Gantt View */}
+          <div className="space-y-3">
+            <div className="hidden md:grid grid-cols-12 text-[10px] font-extrabold uppercase text-slate-400 tracking-wider bg-slate-100/80 p-2.5 rounded-lg border border-slate-200">
+              <div className="col-span-4">Task Name & URL</div>
+              <div className="col-span-2">Assignee</div>
+              <div className="col-span-2">Priority & Status</div>
+              <div className="col-span-4">Schedule Progress (Due Date)</div>
+            </div>
+
+            {projectTasks.length === 0 ? (
+              <div className="p-8 text-center text-slate-400 text-xs font-semibold">
+                No tasks created yet for this project.
+              </div>
+            ) : (
+              projectTasks.map((t, index) => {
+                const isCompleted = t.status === 'done';
+                const isInProgress = t.status === 'in_progress' || t.status === 'in_review';
+                const progressWidth = isCompleted ? '100%' : isInProgress ? '55%' : '15%';
+
+                return (
+                  <div
+                    key={t.id}
+                    onClick={() => onSelectTask(t)}
+                    className="p-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-all cursor-pointer group shadow-2xs hover:shadow-xs grid grid-cols-1 md:grid-cols-12 gap-3 items-center"
+                  >
+                    {/* Task Title & Landing Page Link */}
+                    <div className="md:col-span-4 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono text-slate-400 font-bold shrink-0">#{index + 1}</span>
+                        <h4 className="text-xs font-bold text-slate-900 group-hover:text-[#ea1d25] transition-colors truncate">
+                          {t.title}
+                        </h4>
+                      </div>
+                      {t.url && (
+                        <a
+                          href={t.url.startsWith('http') ? t.url : `https://${t.url}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 text-[10px] font-bold text-[#ea1d25] hover:underline bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded max-w-full truncate"
+                          title={t.url}
+                        >
+                          <Globe className="w-3 h-3 shrink-0" />
+                          <span className="truncate">{t.url.replace(/^https?:\/\//, '')}</span>
+                          <ExternalLink className="w-2.5 h-2.5 shrink-0" />
+                        </a>
+                      )}
+                    </div>
+
+                    {/* Assignee */}
+                    <div className="md:col-span-2 flex items-center gap-2">
+                      <img src={t.assigneeAvatar} alt="" className="w-5 h-5 rounded-full object-cover shrink-0" />
+                      <span className="text-xs text-slate-700 font-medium truncate">{t.assigneeName}</span>
+                    </div>
+
+                    {/* Priority & Status */}
+                    <div className="md:col-span-2 flex flex-wrap items-center gap-1.5">
+                      {getPriorityBadge(t.priority)}
+                    </div>
+
+                    {/* Timeline Bar & Schedule */}
+                    <div className="md:col-span-4 space-y-1">
+                      <div className="flex items-center justify-between text-[10px] text-slate-500 font-semibold">
+                        <span>Target: {t.dueDate}</span>
+                        <span className="font-bold uppercase text-slate-700">{t.status.replace('_', ' ')}</span>
+                      </div>
+                      <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200 p-0.5 relative">
+                        <div
+                          style={{ width: progressWidth }}
+                          className={`h-full rounded-full transition-all duration-300 ${
+                            isCompleted ? 'bg-emerald-500' :
+                            isInProgress ? 'bg-amber-500' :
+                            'bg-slate-400'
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 5. AI SPEC SUBTAB */}
       {activeSubTab === 'ai' && (
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-2xs space-y-4">
           <div className="flex items-center justify-between">

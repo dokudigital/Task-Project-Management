@@ -12,7 +12,9 @@ import {
   CheckCircle2, 
   Circle, 
   Loader2,
-  Trash2
+  Trash2,
+  Link,
+  ExternalLink
 } from 'lucide-react';
 import { Task, User as UserType, TaskStatus, TaskPriority } from '../types';
 
@@ -177,6 +179,34 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             <p className="text-xs text-slate-600 mt-2 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
               {task.description || 'No detailed description provided for this task.'}
             </p>
+
+            {/* Reference URL / Landing Page Link */}
+            <div className="mt-3 p-3 bg-slate-50/80 rounded-lg border border-slate-200">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
+                  <Link className="w-3.5 h-3.5 text-[#ea1d25]" />
+                  Reference URL / Landing Page Link
+                </span>
+                {task.url && (
+                  <a
+                    href={task.url.startsWith('http') ? task.url : `https://${task.url}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[10px] font-bold text-[#ea1d25] hover:underline flex items-center gap-1"
+                  >
+                    <span>Open Link</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
+              <input
+                type="url"
+                placeholder="Paste reference link (e.g. https://doku.com/promo/landing-page)..."
+                value={task.url || ''}
+                onChange={(e) => onUpdateTask({ ...task, url: e.target.value.trim() || undefined, updatedAt: new Date().toISOString() })}
+                className="w-full bg-white border border-slate-200 rounded p-1.5 text-xs text-slate-800 font-mono focus:outline-none focus:border-[#ea1d25]"
+              />
+            </div>
           </div>
 
           {/* Quick Properties Controls */}

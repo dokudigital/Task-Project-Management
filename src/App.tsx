@@ -51,6 +51,7 @@ import { NewTaskModal } from './components/NewTaskModal';
 import { NewUserModal } from './components/NewUserModal';
 import { NewDocModal } from './components/NewDocModal';
 import { AiAssistantModal } from './components/AiAssistantModal';
+import { SettingsModal } from './components/SettingsModal';
 import { LoginPage } from './components/LoginPage';
 import { printExecutiveReport } from './utils/exportUtils';
 
@@ -61,6 +62,25 @@ export default function App() {
   const [users, setUsers] = useState<User[]>(INITIAL_USERS);
   const [documents, setDocuments] = useState<Document[]>(INITIAL_DOCUMENTS);
   const [activities, setActivities] = useState<ActivityLog[]>(INITIAL_ACTIVITIES);
+
+  // Application Branding Customization State (App Name & Tagline)
+  const [appName, setAppName] = useState<string>(() => {
+    return localStorage.getItem('doku_app_name') || 'DOKU';
+  });
+  const [appTagline, setAppTagline] = useState<string>(() => {
+    return localStorage.getItem('doku_app_tagline') || 'Digital Workspace';
+  });
+
+  useEffect(() => {
+    document.title = `${appName} - ${appTagline}`;
+  }, [appName, appTagline]);
+
+  const handleSaveBranding = (newName: string, newTagline: string) => {
+    setAppName(newName);
+    setAppTagline(newTagline);
+    localStorage.setItem('doku_app_name', newName);
+    localStorage.setItem('doku_app_tagline', newTagline);
+  };
 
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -144,6 +164,7 @@ export default function App() {
   const [isNewUserModalOpen, setIsNewUserModalOpen] = useState(false);
   const [isNewDocModalOpen, setIsNewDocModalOpen] = useState(false);
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [newTaskDefaultProjectId, setNewTaskDefaultProjectId] = useState<string | undefined>(undefined);
 
   // Selected Project Object
@@ -320,11 +341,18 @@ export default function App() {
   };
 
   if (!isAuthenticated) {
-    return <LoginPage users={users} onLogin={handleLogin} />;
+    return (
+      <LoginPage 
+        users={users} 
+        onLogin={handleLogin} 
+        appName={appName}
+        appTagline={appTagline}
+      />
+    );
   }
 
   return (
-    <div className="flex h-screen bg-slate-100 font-sans text-slate-900 overflow-hidden">
+    <div className="flex h-screen bg-slate-100 dark:bg-zinc-950 font-sans text-slate-900 dark:text-slate-100 overflow-hidden">
       {/* Notion Sidebar */}
       <Sidebar
         activeTab={activeTab}
@@ -341,7 +369,10 @@ export default function App() {
           setIsNewTaskModalOpen(true);
         }}
         onOpenAiAssistant={() => setIsAiAssistantOpen(true)}
+        onOpenSettings={() => setIsSettingsModalOpen(true)}
         onLogout={handleLogout}
+        appName={appName}
+        appTagline={appTagline}
       />
 
       {/* Main Container */}
@@ -353,7 +384,20 @@ export default function App() {
           setSearchQuery={setSearchQuery}
           currentUser={currentUser}
           tasks={tasks}
+          projects={projects}
+          documents={documents}
+          users={users}
           onSelectTask={(task) => setSelectedTask(task)}
+          onSelectProject={(projectId) => {
+            setSelectedProjectId(projectId);
+            setActiveTab('projects');
+          }}
+          onSelectDoc={(doc) => {
+            setActiveTab('docs');
+          }}
+          onSelectUser={(userId) => {
+            setActiveTab('team');
+          }}
           onOpenNewTaskModal={() => {
             setNewTaskDefaultProjectId(undefined);
             setIsNewTaskModalOpen(true);
@@ -362,8 +406,11 @@ export default function App() {
           onOpenNewUserModal={() => setIsNewUserModalOpen(true)}
           onExportReport={() => printExecutiveReport(projects, tasks, users)}
           onOpenAiAssistant={() => setIsAiAssistantOpen(true)}
+          onOpenSettings={() => setIsSettingsModalOpen(true)}
           isDarkMode={isDarkMode}
           onToggleDarkMode={handleToggleDarkMode}
+          appName={appName}
+          appTagline={appTagline}
         />
 
         {/* View Content Body */}
@@ -521,6 +568,20 @@ export default function App() {
       {isAiAssistantOpen && (
         <AiAssistantModal
           onClose={() => setIsAiAssistantOpen(false)}
+          appName={appName}
+        />
+      )}
+
+      {/* Settings / Branding Customization Modal */}
+      {isSettingsModalOpen && (
+        <SettingsModal
+          appName={appName}
+          appTagline={appTagline}
+          onSaveBranding={handleSaveBranding}
+          isDarkMode={isDarkMode}
+          onToggleDarkMode={handleToggleDarkMode}
+          currentUser={currentUser}
+          onClose={() => setIsSettingsModalOpen(false)}
         />
       )}
     </div>

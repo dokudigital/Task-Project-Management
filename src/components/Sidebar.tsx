@@ -11,7 +11,8 @@ import {
   ChevronRight, 
   CheckCircle2, 
   Layers,
-  LogOut
+  LogOut,
+  Settings
 } from 'lucide-react';
 import { ActiveTab, Project, User } from '../types';
 
@@ -27,7 +28,10 @@ interface SidebarProps {
   onOpenNewProjectModal: () => void;
   onOpenNewTaskModal: () => void;
   onOpenAiAssistant: () => void;
+  onOpenSettings?: () => void;
   onLogout?: () => void;
+  appName?: string;
+  appTagline?: string;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -42,24 +46,45 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenNewProjectModal,
   onOpenNewTaskModal,
   onOpenAiAssistant,
-  onLogout
+  onOpenSettings,
+  onLogout,
+  appName = 'DOKU',
+  appTagline = 'Digital Workspace'
 }) => {
+  const brandInitial = appName.trim().charAt(0).toUpperCase() || 'D';
+
   return (
     <aside className="w-64 bg-gradient-to-b from-[#000000] to-[#161616] text-slate-300 flex flex-col h-screen border-r border-slate-800 select-none shrink-0 transition-all">
       {/* Workspace Brand Header */}
-      <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[#ea1d25] flex items-center justify-center text-white font-black text-lg shadow-md shadow-[#ea1d25]/30">
-            D
+      <div className="p-4 border-b border-slate-800 flex items-center justify-between group">
+        <div 
+          onClick={onOpenSettings}
+          className="flex items-center gap-2.5 min-w-0 cursor-pointer hover:opacity-90 transition-opacity"
+          title="Klik untuk membuka Pengaturan & Branding"
+        >
+          <div className="w-8 h-8 rounded-lg bg-[#ea1d25] flex items-center justify-center text-white font-black text-lg shadow-md shadow-[#ea1d25]/30 shrink-0">
+            {brandInitial}
           </div>
-          <div>
-            <h1 className="font-extrabold text-white text-lg leading-none tracking-tight">DOKU</h1>
-            <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              Digital Workspace
+          <div className="min-w-0">
+            <h1 className="font-extrabold text-white text-base leading-tight tracking-tight truncate max-w-[140px]">
+              {appName}
+            </h1>
+            <p className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5 truncate max-w-[140px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 animate-pulse"></span>
+              <span className="truncate">{appTagline}</span>
             </p>
           </div>
         </div>
+
+        {onOpenSettings && (
+          <button
+            onClick={onOpenSettings}
+            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors shrink-0"
+            title="Pengaturan Aplikasi & Branding"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Main Action Buttons */}
@@ -77,7 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#ea1d25]/10 hover:bg-[#ea1d25]/20 border border-[#ea1d25]/40 text-white text-xs font-semibold rounded-lg transition-all"
         >
           <Sparkles className="w-3.5 h-3.5 text-[#ea1d25] animate-pulse" />
-          <span>DOKU AI Generator</span>
+          <span className="truncate">{appName} AI Generator</span>
         </button>
       </div>
 
@@ -181,6 +206,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <BarChart3 className={`w-4 h-4 ${activeTab === 'reports' ? 'text-white' : 'text-rose-400'}`} />
           <span>Reports & Export</span>
         </button>
+
+        {onOpenSettings && (
+          <button
+            onClick={() => {
+              onOpenSettings();
+            }}
+            className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors text-slate-300 hover:bg-slate-800/60"
+          >
+            <Settings className="w-4 h-4 text-purple-400" />
+            <span>Pengaturan & Branding</span>
+          </button>
+        )}
 
         {/* Project List Section */}
         <div className="pt-4 mt-2 border-t border-slate-800/80">

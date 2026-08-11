@@ -3,15 +3,16 @@ import { X, Sparkles, Send, Loader2 } from 'lucide-react';
 
 interface AiAssistantModalProps {
   onClose: () => void;
+  appName?: string;
 }
 
-export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({ onClose }) => {
+export const AiAssistantModal: React.FC<AiAssistantModalProps> = ({ onClose, appName = 'DOKU' }) => {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; text: string }>>([
     {
       role: 'assistant',
-      text: 'Halo! Saya DOKU AI Assistant untuk DOKU Project Management. Saya bisa membantu merancang spesifikasi proyek, menyusun subtask, merangkum dokumen, atau memberikan rekomendasi manajemen tim.'
+      text: `Halo! Saya ${appName} AI Assistant. Saya bisa membantu merancang spesifikasi proyek, menyusun subtask, merangkum dokumen, atau memberikan rekomendasi manajemen tim.`
     }
   ]);
 

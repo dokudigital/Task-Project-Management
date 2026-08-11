@@ -5,9 +5,11 @@ import { User } from '../types';
 interface LoginPageProps {
   users: User[];
   onLogin: (user: User) => void;
+  appName?: string;
+  appTagline?: string;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ users, onLogin }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ users, onLogin, appName = 'DOKU', appTagline = 'Digital Workspace' }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -109,22 +111,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({ users, onLogin }) => {
         <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-[#ea1d25]/10 border border-[#ea1d25]/30 text-[#ea1d25] text-xs font-bold tracking-wide">
             <ShieldCheck className="w-4 h-4 text-[#ea1d25]" />
-            <span>DOKU Internal Tools Gateway</span>
+            <span>{appName} {appTagline} Gateway</span>
           </div>
 
           <div 
             onClick={handleLogoClick} 
             className="flex items-center justify-center gap-3 cursor-pointer group active:scale-95 transition-transform"
-            title="DOKU Internal Gateway"
+            title={`${appName} Gateway`}
           >
             <div className="w-10 h-10 rounded-xl bg-[#ea1d25] flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-[#ea1d25]/40 group-hover:bg-[#c8141b] transition-colors">
-              D
+              {(appName.trim().charAt(0) || 'D').toUpperCase()}
             </div>
-            <h1 className="text-3xl font-black text-white tracking-tight">DOKU</h1>
+            <h1 className="text-3xl font-black text-white tracking-tight">{appName}</h1>
           </div>
 
           <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
-            Sign in to access Analytics Dashboard, Kanban Task Boards, Executive Reports, and DOKU AI Assistant.
+            Sign in to access Analytics Dashboard, Kanban Task Boards, Executive Reports, and {appName} AI Assistant.
           </p>
         </div>
 

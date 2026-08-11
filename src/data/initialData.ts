@@ -197,6 +197,7 @@ export const INITIAL_TASKS: Task[] = [
     tags: ['UI/UX', 'Figma', 'Design System'],
     estimatedHours: 24,
     actualHours: 22,
+    url: 'https://doku.com/promo/checkout-landing',
     subtasks: [
       { id: 'sub-1', title: 'Benchmark checkout flows on leading e-commerce apps', completed: true },
       { id: 'sub-2', title: 'Create low-fidelity Figma mockups', completed: true },
@@ -231,6 +232,7 @@ export const INITIAL_TASKS: Task[] = [
     tags: ['Backend', 'API', 'Security'],
     estimatedHours: 40,
     actualHours: 28,
+    url: 'https://doku.com/developers/docs/payment-gateway',
     subtasks: [
       { id: 'sub-10', title: 'Setup Payment Sandbox Environment', completed: true },
       { id: 'sub-11', title: 'Create /api/payment/notification endpoint', completed: true },

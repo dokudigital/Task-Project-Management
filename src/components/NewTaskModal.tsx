@@ -25,6 +25,7 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
   const [dueDate, setDueDate] = useState('2026-08-25');
   const [estimatedHours, setEstimatedHours] = useState(16);
   const [tagsInput, setTagsInput] = useState('Frontend, Feature');
+  const [url, setUrl] = useState('');
   const [description, setDescription] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -52,6 +53,7 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
       subtasks: [],
       comments: [],
       estimatedHours: Number(estimatedHours) || 8,
+      url: url.trim() || undefined,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -161,6 +163,19 @@ export const NewTaskModal: React.FC<NewTaskModalProps> = ({
               value={tagsInput}
               onChange={(e) => setTagsInput(e.target.value)}
               className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 focus:outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="font-bold text-slate-700 block mb-1">
+              Reference URL / Landing Page Link <span className="font-normal text-slate-400">(Optional)</span>
+            </label>
+            <input
+              type="url"
+              placeholder="https://doku.com/promo/landing-page"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 focus:outline-none focus:border-blue-500 font-mono text-[11px]"
             />
           </div>
 

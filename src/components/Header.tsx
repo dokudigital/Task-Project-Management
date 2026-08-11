@@ -13,9 +13,17 @@ import {
   CheckCircle2,
   ChevronRight,
   Sun,
-  Moon
+  Moon,
+  X,
+  CheckSquare,
+  Folder,
+  FileText,
+  User as UserIcon,
+  Tag,
+  CornerDownLeft,
+  Settings
 } from 'lucide-react';
-import { ActiveTab, User, Project, Task } from '../types';
+import { ActiveTab, User, Project, Task, Document } from '../types';
 
 interface HeaderProps {
   activeTab: ActiveTab;
@@ -24,14 +32,23 @@ interface HeaderProps {
   setSearchQuery: (query: string) => void;
   currentUser: User;
   tasks?: Task[];
+  projects?: Project[];
+  documents?: Document[];
+  users?: User[];
   onSelectTask?: (task: Task) => void;
+  onSelectProject?: (projectId: string) => void;
+  onSelectDoc?: (doc: Document) => void;
+  onSelectUser?: (userId: string) => void;
   onOpenNewTaskModal: () => void;
   onOpenNewProjectModal: () => void;
   onOpenNewUserModal: () => void;
   onExportReport: () => void;
   onOpenAiAssistant: () => void;
+  onOpenSettings?: () => void;
   isDarkMode?: boolean;
   onToggleDarkMode?: () => void;
+  appName?: string;
+  appTagline?: string;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -41,27 +58,103 @@ export const Header: React.FC<HeaderProps> = ({
   setSearchQuery,
   currentUser,
   tasks = [],
+  projects = [],
+  documents = [],
+  users = [],
   onSelectTask,
+  onSelectProject,
+  onSelectDoc,
+  onSelectUser,
   onOpenNewTaskModal,
   onOpenNewProjectModal,
   onOpenNewUserModal,
   onExportReport,
   onOpenAiAssistant,
+  onOpenSettings,
   isDarkMode = false,
-  onToggleDarkMode
+  onToggleDarkMode,
+  appName = 'DOKU',
+  appTagline = 'Digital Workspace'
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowNotifications(false);
       }
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setIsSearchFocused(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Highlight matching keyword helper
+  const highlightMatch = (text: string, query: string) => {
+    if (!query.trim() || !text) return text;
+    const parts = text.split(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'));
+    return parts.map((part, index) => 
+      part.toLowerCase() === query.trim().toLowerCase() ? (
+        <mark key={index} className="bg-rose-100 text-[#ea1d25] dark:bg-rose-950 dark:text-rose-300 rounded font-semibold px-0.5">
+          {part}
+        </mark>
+      ) : (
+        part
+      )
+    );
+  };
+
+  // Auto-Suggest Filtering across Tasks, Projects, Docs, and Users
+  const searchSuggestions = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return { tasks: [], projects: [], documents: [], users: [], totalCount: 0 };
+
+    const matchedTasks = tasks.filter(t => 
+      t.title.toLowerCase().includes(q) || 
+      t.description?.toLowerCase().includes(q) ||
+      t.projectName?.toLowerCase().includes(q) ||
+      t.assigneeName?.toLowerCase().includes(q) ||
+      t.tags?.some(tag => tag.toLowerCase().includes(q))
+    ).slice(0, 5);
+
+    const matchedProjects = projects.filter(p => 
+      p.name.toLowerCase().includes(q) ||
+      p.code.toLowerCase().includes(q) ||
+      p.description?.toLowerCase().includes(q) ||
+      p.category?.toLowerCase().includes(q)
+    ).slice(0, 4);
+
+    const matchedDocs = documents.filter(d => 
+      d.title.toLowerCase().includes(q) ||
+      d.content?.toLowerCase().includes(q) ||
+      d.authorName?.toLowerCase().includes(q) ||
+      d.tags?.some(tag => tag.toLowerCase().includes(q))
+    ).slice(0, 4);
+
+    const matchedUsers = users.filter(u => 
+      u.name.toLowerCase().includes(q) ||
+      u.email.toLowerCase().includes(q) ||
+      u.role.toLowerCase().includes(q) ||
+      u.department?.toLowerCase().includes(q) ||
+      u.title?.toLowerCase().includes(q)
+    ).slice(0, 4);
+
+    const totalCount = matchedTasks.length + matchedProjects.length + matchedDocs.length + matchedUsers.length;
+
+    return {
+      tasks: matchedTasks,
+      projects: matchedProjects,
+      documents: matchedDocs,
+      users: matchedUsers,
+      totalCount
+    };
+  }, [searchQuery, tasks, projects, documents, users]);
 
   const taskAlerts = useMemo(() => {
     if (!tasks || tasks.length === 0) return [];
@@ -137,16 +230,240 @@ export const Header: React.FC<HeaderProps> = ({
         {getBreadcrumbTitle()}
       </div>
 
-      {/* Center Search Input */}
-      <div className="relative w-72 max-w-sm hidden md:block">
-        <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
-        <input
-          type="text"
-          placeholder="Search tasks, projects, docs..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#ea1d25]/20 focus:border-[#ea1d25] transition-all placeholder:text-slate-400"
-        />
+      {/* Center Search Input with Auto-Suggest Dropdown */}
+      <div className="relative w-80 lg:w-96 hidden md:block" ref={searchContainerRef}>
+        <div className="relative flex items-center">
+          <Search className="w-4 h-4 absolute left-3 text-slate-400 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search tasks, projects, docs, team..."
+            value={searchQuery}
+            onFocus={() => setIsSearchFocused(true)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setIsSearchFocused(true);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                setIsSearchFocused(false);
+              }
+            }}
+            className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-8 py-1.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#ea1d25]/20 focus:border-[#ea1d25] transition-all placeholder:text-slate-400"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setIsSearchFocused(false);
+              }}
+              className="absolute right-2.5 p-0.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-200/60 transition-all"
+              title="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Auto-Suggest Dropdown Popup */}
+        {isSearchFocused && searchQuery.trim().length > 0 && (
+          <div className="absolute top-full mt-2 w-96 lg:w-[480px] left-0 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+            {/* Header bar */}
+            <div className="p-3 bg-slate-900 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Search className="w-3.5 h-3.5 text-[#ea1d25]" />
+                <span className="font-bold text-xs">Search Auto-Suggestions</span>
+              </div>
+              <span className="text-[10px] font-bold bg-[#ea1d25] px-2 py-0.5 rounded-full text-white">
+                {searchSuggestions.totalCount} match{searchSuggestions.totalCount !== 1 ? 'es' : ''}
+              </span>
+            </div>
+
+            {/* Suggestions List Container */}
+            <div className="max-h-96 overflow-y-auto divide-y divide-slate-100 p-2 space-y-2">
+              {searchSuggestions.totalCount === 0 ? (
+                <div className="p-6 text-center text-slate-500 space-y-1.5">
+                  <Search className="w-6 h-6 text-slate-300 mx-auto" />
+                  <p className="text-xs font-semibold text-slate-700">No results found for "{searchQuery}"</p>
+                  <p className="text-[11px] text-slate-400">
+                    Try searching by task name, project code (e.g. DOKU-01), document title, or team member.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* Category: Tasks */}
+                  {searchSuggestions.tasks.length > 0 && (
+                    <div className="space-y-1">
+                      <div className="px-2 py-1 flex items-center justify-between text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                        <span className="flex items-center gap-1.5">
+                          <CheckSquare className="w-3 h-3 text-[#ea1d25]" />
+                          Tasks ({searchSuggestions.tasks.length})
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        {searchSuggestions.tasks.map(t => (
+                          <div
+                            key={t.id}
+                            onClick={() => {
+                              onSelectTask?.(t);
+                              setIsSearchFocused(false);
+                            }}
+                            className="p-2.5 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors flex items-center justify-between group border border-transparent hover:border-slate-200"
+                          >
+                            <div className="flex items-start gap-2.5 min-w-0">
+                              <span className={`px-1.5 py-0.5 text-[9px] font-extrabold uppercase rounded shrink-0 mt-0.5 ${
+                                t.status === 'done' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                                t.status === 'in_progress' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                                'bg-slate-100 text-slate-700 border border-slate-200'
+                              }`}>
+                                {t.status.replace('_', ' ')}
+                              </span>
+                              <div className="min-w-0">
+                                <div className="text-xs font-bold text-slate-900 group-hover:text-[#ea1d25] transition-colors truncate">
+                                  {highlightMatch(t.title, searchQuery)}
+                                </div>
+                                <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
+                                  <span className="font-semibold text-slate-600">{t.projectName}</span>
+                                  <span>•</span>
+                                  <span>{t.assigneeName}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#ea1d25] shrink-0 transition-colors ml-2" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Category: Projects */}
+                  {searchSuggestions.projects.length > 0 && (
+                    <div className="space-y-1 pt-2">
+                      <div className="px-2 py-1 flex items-center justify-between text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                        <span className="flex items-center gap-1.5">
+                          <Folder className="w-3 h-3 text-indigo-600" />
+                          Projects ({searchSuggestions.projects.length})
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        {searchSuggestions.projects.map(p => (
+                          <div
+                            key={p.id}
+                            onClick={() => {
+                              onSelectProject?.(p.id);
+                              setIsSearchFocused(false);
+                            }}
+                            className="p-2.5 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors flex items-center justify-between group border border-transparent hover:border-slate-200"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <span className="text-base shrink-0">{p.icon}</span>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] font-extrabold px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded border border-slate-200 shrink-0">
+                                    {p.code}
+                                  </span>
+                                  <span className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">
+                                    {highlightMatch(p.name, searchQuery)}
+                                  </span>
+                                </div>
+                                <div className="text-[10px] text-slate-500 truncate mt-0.5">
+                                  {p.category} • Progress: {p.progress}%
+                                </div>
+                              </div>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-600 shrink-0 transition-colors ml-2" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Category: Documents */}
+                  {searchSuggestions.documents.length > 0 && (
+                    <div className="space-y-1 pt-2">
+                      <div className="px-2 py-1 flex items-center justify-between text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                        <span className="flex items-center gap-1.5">
+                          <FileText className="w-3 h-3 text-amber-600" />
+                          Documents & Specs ({searchSuggestions.documents.length})
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        {searchSuggestions.documents.map(d => (
+                          <div
+                            key={d.id}
+                            onClick={() => {
+                              onSelectDoc?.(d);
+                              setIsSearchFocused(false);
+                            }}
+                            className="p-2.5 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors flex items-center justify-between group border border-transparent hover:border-slate-200"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <span className="text-base shrink-0">{d.icon || '📄'}</span>
+                              <div className="min-w-0">
+                                <div className="text-xs font-bold text-slate-900 group-hover:text-amber-600 transition-colors truncate">
+                                  {highlightMatch(d.title, searchQuery)}
+                                </div>
+                                <div className="text-[10px] text-slate-500 truncate mt-0.5">
+                                  Author: {d.authorName} • Updated {d.updatedAt}
+                                </div>
+                              </div>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-amber-600 shrink-0 transition-colors ml-2" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Category: Team Members */}
+                  {searchSuggestions.users.length > 0 && (
+                    <div className="space-y-1 pt-2">
+                      <div className="px-2 py-1 flex items-center justify-between text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                        <span className="flex items-center gap-1.5">
+                          <UserIcon className="w-3 h-3 text-emerald-600" />
+                          Team Members ({searchSuggestions.users.length})
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        {searchSuggestions.users.map(u => (
+                          <div
+                            key={u.id}
+                            onClick={() => {
+                              onSelectUser?.(u.id);
+                              setIsSearchFocused(false);
+                            }}
+                            className="p-2.5 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors flex items-center justify-between group border border-transparent hover:border-slate-200"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <img src={u.avatarUrl} alt="" className="w-6 h-6 rounded-full border border-slate-200 shrink-0 object-cover" />
+                              <div className="min-w-0">
+                                <div className="text-xs font-bold text-slate-900 group-hover:text-emerald-600 transition-colors truncate">
+                                  {highlightMatch(u.name, searchQuery)}
+                                </div>
+                                <div className="text-[10px] text-slate-500 truncate mt-0.5">
+                                  {u.title} ({u.role.toUpperCase()}) • {u.department}
+                                </div>
+                              </div>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-emerald-600 shrink-0 transition-colors ml-2" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Footer Bar */}
+            <div className="px-3 py-2 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500 font-medium">
+              <span className="flex items-center gap-1">
+                <CornerDownLeft className="w-3 h-3 text-slate-400" />
+                Click item to view details
+              </span>
+              <span>Press ESC to dismiss</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Quick Action Buttons */}
@@ -186,6 +503,18 @@ export const Header: React.FC<HeaderProps> = ({
           <Download className="w-3.5 h-3.5 text-emerald-600" />
           <span className="hidden sm:inline">Print Report</span>
         </button>
+
+        {/* Settings / Branding Button */}
+        {onOpenSettings && (
+          <button
+            onClick={onOpenSettings}
+            className="p-2 text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 border border-slate-200 dark:border-zinc-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all"
+            title="Pengaturan Aplikasi & Branding"
+          >
+            <Settings className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+            <span className="hidden xl:inline">Pengaturan</span>
+          </button>
+        )}
 
         {/* Theme Toggle Button */}
         {onToggleDarkMode && (

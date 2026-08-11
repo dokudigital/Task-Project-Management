@@ -55,6 +55,7 @@ export interface Task {
   comments: TaskComment[];
   estimatedHours?: number;
   actualHours?: number;
+  url?: string;
   createdAt: string;
   updatedAt: string;
 }

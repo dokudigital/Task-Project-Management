@@ -15,7 +15,9 @@ import {
   Tag, 
   ChevronRight,
   Sparkles,
-  GripVertical
+  GripVertical,
+  ExternalLink,
+  Globe
 } from 'lucide-react';
 import { Task, Project, User as UserType, TaskStatus, TaskPriority, TaskViewMode } from '../types';
 import { CalendarView } from './CalendarView';
@@ -60,10 +62,35 @@ export const TasksView: React.FC<TasksViewProps> = ({
 
   const getPriorityBadge = (priority: TaskPriority) => {
     switch (priority) {
-      case 'urgent': return <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-rose-100 text-rose-700">URGENT</span>;
-      case 'high': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700">HIGH</span>;
-      case 'medium': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">MEDIUM</span>;
-      case 'low': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">LOW</span>;
+      case 'urgent': 
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-300 shadow-2xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping" />
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-600 -ml-3" />
+            URGENT
+          </span>
+        );
+      case 'high': 
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300/80">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            HIGH
+          </span>
+        );
+      case 'medium': 
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+            MEDIUM
+          </span>
+        );
+      case 'low': 
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+            LOW
+          </span>
+        );
     }
   };
 
@@ -305,6 +332,24 @@ export const TasksView: React.FC<TasksViewProps> = ({
                           {t.title}
                         </h4>
 
+                        {/* Reference URL badge if available */}
+                        {t.url && (
+                          <div className="flex items-center gap-1">
+                            <a
+                              href={t.url.startsWith('http') ? t.url : `https://${t.url}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-1 text-[10px] font-bold text-[#ea1d25] bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2 py-0.5 rounded transition-all max-w-full truncate"
+                              title={t.url}
+                            >
+                              <Globe className="w-3 h-3 shrink-0" />
+                              <span className="truncate">{t.url.replace(/^https?:\/\//, '')}</span>
+                              <ExternalLink className="w-2.5 h-2.5 shrink-0" />
+                            </a>
+                          </div>
+                        )}
+
                         {/* Subtasks Progress */}
                         {totalSubs > 0 && (
                           <div className="flex items-center gap-2 text-[11px] text-slate-500">
@@ -350,6 +395,7 @@ export const TasksView: React.FC<TasksViewProps> = ({
                 <th className="p-3">Project</th>
                 <th className="p-3">Assignee</th>
                 <th className="p-3">Priority</th>
+                <th className="p-3">URL / Landing Page</th>
                 <th className="p-3">Status</th>
                 <th className="p-3">Due Date</th>
               </tr>
@@ -372,6 +418,23 @@ export const TasksView: React.FC<TasksViewProps> = ({
                   </td>
                   <td className="p-3">{getPriorityBadge(t.priority)}</td>
                   <td className="p-3">
+                    {t.url ? (
+                      <a
+                        href={t.url.startsWith('http') ? t.url : `https://${t.url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-[#ea1d25] hover:underline bg-rose-50 border border-rose-200 px-2 py-0.5 rounded max-w-[160px] truncate"
+                        title={t.url}
+                      >
+                        <Globe className="w-3 h-3 shrink-0" />
+                        <span className="truncate">{t.url.replace(/^https?:\/\//, '')}</span>
+                        <ExternalLink className="w-2.5 h-2.5 shrink-0" />
+                      </a>
+                    ) : (
+                      <span className="text-slate-300 text-[11px] font-mono">-</span>
+                    )}
+                  </td>
+                  <td className="p-3">
                     <select
                       value={t.status}
                       onChange={(e) => onUpdateTaskStatus(t.id, e.target.value as TaskStatus)}
@@ -393,28 +456,68 @@ export const TasksView: React.FC<TasksViewProps> = ({
 
       {/* VIEW MODE 3: LIST VIEW */}
       {viewMode === 'list' && (
-        <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-2">
-          {filteredTasks.map(t => (
-            <div
-              key={t.id}
-              onClick={() => onSelectTask(t)}
-              className="p-3 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200/80 cursor-pointer transition-colors flex items-center justify-between"
-            >
-              <div className="flex items-center gap-3">
-                {getStatusBadge(t.status)}
-                <div>
-                  <h4 className="text-xs font-bold text-slate-900">{t.title}</h4>
-                  <p className="text-[10px] text-slate-500 mt-0.5">{t.projectName} • Assignee: {t.assigneeName}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                {getPriorityBadge(t.priority)}
-                <span className="text-xs font-semibold text-slate-600">{t.dueDate}</span>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
-              </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-2.5">
+          {filteredTasks.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 text-xs font-semibold">
+              No tasks match the current filter options.
             </div>
-          ))}
+          ) : (
+            filteredTasks.map(t => {
+              const priorityBorderColor = 
+                t.priority === 'urgent' ? 'border-l-4 border-l-rose-500' :
+                t.priority === 'high' ? 'border-l-4 border-l-amber-500' :
+                t.priority === 'medium' ? 'border-l-4 border-l-blue-500' :
+                'border-l-4 border-l-slate-300';
+
+              return (
+                <div
+                  key={t.id}
+                  onClick={() => onSelectTask(t)}
+                  className={`p-3 bg-slate-50 hover:bg-white rounded-lg border border-slate-200 cursor-pointer transition-all hover:shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${priorityBorderColor}`}
+                >
+                  <div className="flex items-center gap-3">
+                    {getStatusBadge(t.status)}
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 flex items-center gap-2">
+                        <span>{t.title}</span>
+                      </h4>
+                      <div className="text-[10px] text-slate-500 mt-0.5 flex flex-wrap items-center gap-2">
+                        <span className="font-semibold text-slate-700">{t.projectName}</span>
+                        <span>•</span>
+                        <span>Assignee: {t.assigneeName}</span>
+                        {t.url && (
+                          <>
+                            <span>•</span>
+                            <a
+                              href={t.url.startsWith('http') ? t.url : `https://${t.url}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-1 font-bold text-[#ea1d25] hover:underline bg-rose-50 border border-rose-200 px-1.5 py-0.2 rounded"
+                              title={t.url}
+                            >
+                              <Globe className="w-3 h-3" />
+                              <span className="max-w-[180px] truncate">{t.url.replace(/^https?:\/\//, '')}</span>
+                              <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 self-end sm:self-auto shrink-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider hidden md:inline">Priority:</span>
+                      {getPriorityBadge(t.priority)}
+                    </div>
+                    <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{t.dueDate}</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       )}
     </div>
