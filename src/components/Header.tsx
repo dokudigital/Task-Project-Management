@@ -207,17 +207,17 @@ export const Header: React.FC<HeaderProps> = ({
 
     switch (activeTab) {
       case 'dashboard':
-        return <span className="text-sm font-bold text-slate-900">Dashboard</span>;
+        return <span className="text-sm font-bold text-slate-900">Executive Dashboard & Analytics Overview</span>;
       case 'projects':
-        return <span className="text-sm font-bold text-slate-900">Project</span>;
+        return <span className="text-sm font-bold text-slate-900">Project Portfolio Management</span>;
       case 'tasks':
-        return <span className="text-sm font-bold text-slate-900">Task Board</span>;
+        return <span className="text-sm font-bold text-slate-900">Task Board (Kanban & Database Table)</span>;
       case 'team':
-        return <span className="text-sm font-bold text-slate-900">Team</span>;
+        return <span className="text-sm font-bold text-slate-900">Team & Workload Distribution</span>;
       case 'docs':
-        return <span className="text-sm font-bold text-slate-900">Notes & Docs</span>;
+        return <span className="text-sm font-bold text-slate-900">DOKU Workspace Notes & Docs</span>;
       case 'reports':
-        return <span className="text-sm font-bold text-slate-900">Export Reports</span>;
+        return <span className="text-sm font-bold text-slate-900">Executive Reports & Data Export</span>;
       default:
         return <span className="text-sm font-bold text-slate-900">Workspace</span>;
     }
