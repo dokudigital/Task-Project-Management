@@ -141,9 +141,20 @@ export default function App() {
 
   const [currentUser, setCurrentUser] = useState<User>(() => {
     const savedUserId = localStorage.getItem('doku_user_id');
-    const savedUser = users.find(u => u.id === savedUserId) || INITIAL_USERS.find(u => u.id === savedUserId);
+    const savedUser = INITIAL_USERS.find(u => u.id === savedUserId);
     return savedUser || INITIAL_USERS[0];
   });
+
+  // Sync currentUser when users list is fetched from Firestore
+  useEffect(() => {
+    const savedUserId = localStorage.getItem('doku_user_id');
+    if (savedUserId && users.length > 0) {
+      const foundUser = users.find(u => u.id === savedUserId);
+      if (foundUser && foundUser.id !== currentUser.id) {
+        setCurrentUser(foundUser);
+      }
+    }
+  }, [users]);
 
   const handleLogin = (user: User) => {
     setCurrentUser(user);

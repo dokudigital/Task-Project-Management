@@ -207,7 +207,7 @@ export const Header: React.FC<HeaderProps> = ({
 
     switch (activeTab) {
       case 'dashboard':
-        return <span className="text-sm font-bold text-slate-900">Executive Analytics</span>;
+        return <span className="text-sm font-bold text-slate-900">Executive Dashboard & Analytics Overview</span>;
       case 'projects':
         return <span className="text-sm font-bold text-slate-900">Project Portfolio Management</span>;
       case 'tasks':
