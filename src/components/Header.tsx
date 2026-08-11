@@ -209,15 +209,15 @@ export const Header: React.FC<HeaderProps> = ({
       case 'dashboard':
         return <span className="text-sm font-bold text-slate-900">Executive Analytics</span>;
       case 'projects':
-        return <span className="text-sm font-bold text-slate-900">Project Portfolio Management</span>;
+        return <span className="text-sm font-bold text-slate-900">Project</span>;
       case 'tasks':
-        return <span className="text-sm font-bold text-slate-900">Task Board (Kanban & Database Table)</span>;
+        return <span className="text-sm font-bold text-slate-900">Task Board</span>;
       case 'team':
-        return <span className="text-sm font-bold text-slate-900">Team & Workload Distribution</span>;
+        return <span className="text-sm font-bold text-slate-900">Team & Workload</span>;
       case 'docs':
-        return <span className="text-sm font-bold text-slate-900">DOKU Workspace Notes & Docs</span>;
+        return <span className="text-sm font-bold text-slate-900">Notes & Docs</span>;
       case 'reports':
-        return <span className="text-sm font-bold text-slate-900">Executive Reports & Data Export</span>;
+        return <span className="text-sm font-bold text-slate-900">Reports & Data Export</span>;
       default:
         return <span className="text-sm font-bold text-slate-900">Workspace</span>;
     }
